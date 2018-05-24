@@ -4,7 +4,13 @@ import './index.css';
 //import App from './App';
 import registerServiceWorker from './registerServiceWorker';
 import Cheeselist from './components/cheese-list';
+import {Provider} from 'react-redux';
+import store from './store';
 
-ReactDOM.render( <Cheeselist cheeses={["Bath Blue","Barkham Blue","Buxton Blue"]}/>,
+
+ReactDOM.render( 
+ <Provider store={store}>
+  <Cheeselist />
+  </Provider>,
 document.getElementById('root'));
 registerServiceWorker();
