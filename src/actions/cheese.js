@@ -1,15 +1,19 @@
-// In client/src/actions/cheese.js 
-// add an async action called fetchCheeses which uses the Fetch
-//  API to make a GET request to your /api/cheeses endpoint.
-
-// The async action should dispatch its sync counterparts,
-//  fetchCheesesRequest, fetchCheesesSuccess
-//   and fetchCheesesError.
-
-  // This function will make an AJAX request to the Star Wars API
-// It will randomly fail for 25% of requests, and has a 0.5s delay artifically
-// inserted so you can check your loading state
 import {API_BASE_URL} from '../config';
+
+export const FETCH_RECIPE_REQUEST = 'FETCH_RECIPE_REQUEST';
+export const fetchRecipeRequest = () => ({
+    type: FETCH_RECIPE_REQUEST,    
+});
+
+export const FETCH_RECIPE_SUCCESS = 'FETCH_RECIPE_SUCCESS';
+export const fetchRecipesSuccess = recipes => ({
+    type: FETCH_RECIPE_SUCCESS,
+    loading:false,
+    error:null,
+    recipes
+     
+})
+
 
 export const FETCH_CHEESE_REQUEST = 'FETCH_CHEESE_REQUEST';
 export const fetchCheesesRequest = () => ({
@@ -18,11 +22,12 @@ export const fetchCheesesRequest = () => ({
 });
 
 export const FETCH_CHEESE_SUCCESS = 'FETCH_CHEESE_SUCCESS';
-export const fetchCheesesSuccess = cheeses=> ({
+export const fetchCheesesSuccess = cheeses => ({
     type: FETCH_CHEESE_SUCCESS,
     loading:false,
     error:null,
     cheeses
+     
 });
 
 export const FETCH_CHEESE_ERROR = 'FETCH_CHEESE_ERROR';
@@ -32,46 +37,179 @@ export const fetchCheesesError = error => ({
     error
 });
 
+export const POST_NEW_CHEESE = 'POST_NEW_CHEESE';
+export const postNewCheese = cheese => ({
+    type: POST_NEW_CHEESE, 
+    loading: false,
+    cheese
+});
+export const POST_CHEESE_SUCCESS = 'POST_CHEESE_SUCCESS';
+export const postCheeseSuccess = (cheese) => ({
+	type: POST_CHEESE_SUCCESS,
+	cheese
+});
 
+export const DELETE_CHEESE = 'DELETE_CHEESE';
+export const deleteCheese = cheese => ({
+    type: DELETE_CHEESE, 
+    loading: false,
+    cheese
+});
 
-//create a double function with dispatch passed in 
 export const fetchCheeses = () => (dispatch) => {
     
-    //dispatches the function??self-dispatch
     dispatch(fetchCheesesRequest());
-    
-    //makes a fetch call to the api
-    return fetch(`${API_BASE_URL}/api/cheeses`)
-        .then(res => {
-            
-            if (!res.ok) {
-                return dispatch(fetchCheesesError(res.statusText));
-            }
-            //thinking this is where its converted to response??if server sends json why change here?
-            return res.json()
+      return fetch(`${API_BASE_URL}/`)
+       .then(res => {            
+          if (!res.ok) { return dispatch(fetchCheesesError(res.statusText))}
+          return res.json()
         })
-        
-        //with a succes it then dispatches the success call with cheeses passes in
         .then(cheeses => {
-            console.log("Cheeses:",{cheeses});
-            dispatch(fetchCheesesSuccess(cheeses))});
+          dispatch(fetchCheesesSuccess(cheeses))})
+         .catch(error => dispatch(fetchCheesesError(error)));
+        }
+
+export const postCheese = (data) => (dispatch) => {
+ 
+  dispatch(fetchCheesesRequest());
+  return fetch(`${API_BASE_URL}/`, {
+    body: JSON.stringify(data), 
+    cache: 'no-cache', 
+    headers: { 'content-type': 'application/json' },
+    method: 'POST',
+    mode: 'cors', 
+    redirect: 'follow', 
+    referrer: 'no-referrer',})
+
+    .then(res => {
+      if (!res.ok) { return Promise.reject(res.statusText)}
+      return res.json();
+    })
+    .then(cheese =>  dispatch(postCheeseSuccess(cheese)) )
+    .then(() =>  dispatch(fetchCheeses()) )
+    .catch(error => dispatch(fetchCheesesError(error)));
+    };
+
+export const removeCheese = (id) => (dispatch) => {
+    return fetch(`${API_BASE_URL}/cheese/${id}`, {
+        cache: 'no-cache', 
+        headers: { 'content-type': 'application/json' },
+        method: 'DELETE',
+        mode: 'cors', 
+        redirect: 'follow',
+        referrer: 'no-referrer', 
+      })
+      .then(() =>  dispatch(fetchCheeses()) )
+      .catch(error => dispatch(fetchCheesesError(error)));
+    }
+
+
+
+//     ///------for a side project
+
+
+
+//find by ingredients
+export const fetchRecipes = (queryString) => (dispatch) => {
+        //apples%2Cflour%2Csugar
+    dispatch(fetchRecipeRequest());
+    return fetch(`https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/findByIngredients?fillIngredients=false&ingredients=${queryString}&limitLicense=false&number=5&ranking=1`, {
+   
+    cache: 'no-cache', 
+    credentials: 'same-origin',
+    headers: {
+      'X-Mashape-Key': 'KIpcxoopqbmshgBnI6jbDfqaTFdep1CtFMajsnNSg0vp2OPTmY',
+      'content-type': 'application/json'
+    },
+    method: 'GET', 
+    mode: 'cors', 
+    redirect: 'follow', 
+    referrer: 'no-referrer', 
+  })
+     .then(res => {            
+        //if (!res.ok) { return dispatch(fetchCheesesError(res.statusText))}
+        return res.json()
+      })
+      .then(recipes =>  {
+        console.log(recipes);  
+        dispatch(fetchRecipesSuccess(recipes))})
+       .catch(error => dispatch(fetchCheesesError(error)));
 }
 
-//  export const fetchCheeses = () => (dispatch) =>  {
-//     return  fetch(`http://localhost:8080/api/cheeses`)
-//     .then(data=>console.log(data));
-//  }
-// dispatch(FETCHCheesesRequest());
-//     dispatch(fetchCheeseRequest());
-//     fetch(`http://localhost:8080/api/cheeses`)
-//     //FETCH(name)
-//    .then(data => dispatch(FETCHCheesesSuccess(data)))
-//    .catch(error => console.log(error))
-//   .then(results=>console.log(results));
-//.then(results => console.log(results));
-// .then(data => console.log(data.body.locked))
-//.then(data => data.results.map(character => character.name))
-//  .then(dispatch(this.FETCHCheesesRequest()))
-//  .then(data => dispatch(this.FETCHCharactersSuccess(data)))
-//  .then(data => dispatch(this.FETCHCheesesError))
-//  .catch(error => console.log(error))
+export const fetchRecipesById = (id) => (dispatch) => {
+
+    //dispatch(fetchRecipeRequest());
+    return fetch(`https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/${id}/information`, {
+   
+    cache: 'no-cache', 
+    credentials: 'same-origin',
+    headers: {
+      'X-Mashape-Key': 'KIpcxoopqbmshgBnI6jbDfqaTFdep1CtFMajsnNSg0vp2OPTmY',
+      'content-type': 'application/json'
+    },
+    method: 'GET', 
+    mode: 'cors', 
+    redirect: 'follow', 
+    referrer: 'no-referrer', 
+  })
+     .then(results => {            
+       console.log(results.body);
+        return results.json()
+      })
+      .then(recipe =>  {
+       console.log(recipe);
+       // return recipes.sourceUrl.toString();
+     }) 
+        //dispatch(fetchRecipesSuccess(recipes))})
+       .catch(error => dispatch(fetchCheesesError(error)));
+}
+
+
+
+export const getLinkToRecipe = (id) => (dispatch) => {
+    return fetchRecipesById(id)
+    .then(result => console.log(result))
+}
+
+
+export const fetchRecipesInBulk = (idString) => (dispatch) => {
+      //dispatch(fetchRecipeRequest());
+      return fetch(`https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/informationBulk?ids=${idString}`, {
+   
+        cache: 'no-cache', 
+        credentials: 'same-origin',
+        headers: {
+          'X-Mashape-Key': 'KIpcxoopqbmshgBnI6jbDfqaTFdep1CtFMajsnNSg0vp2OPTmY',
+          'content-type': 'application/json'
+        },
+        method: 'GET', 
+        mode: 'cors', 
+        redirect: 'follow', 
+        referrer: 'no-referrer', 
+      })
+         .then(results => {            
+           console.log(results.body);
+           console.log(results)
+            return results.json()
+          })
+          .then(recipes =>  {
+           console.log(recipes);
+           // return recipes.sourceUrl.toString();
+         }) 
+            //dispatch(fetchRecipesSuccess(recipes))})
+           .catch(error => dispatch(fetchCheesesError(error)));
+    }
+    
+
+
+
+//recipes in bulk endpoint
+//.get("https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/informationBulk?ids=456%2C987%2C321")
+
+ //GEThttps://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/{id}/information
+//  unirest.get("https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/977701/information?includeNutrition=false")
+//  .header("X-Mashape-Key", "KIpcxoopqbmshgBnI6jbDfqaTFdep1CtFMajsnNSg0vp2OPTmY")
+//  .header("Accept", "application/json")
+//  .end(function (result) {
+//    console.log(result.status, result.headers, result.body);
+//  });
